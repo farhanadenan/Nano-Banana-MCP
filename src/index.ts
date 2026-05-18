@@ -220,7 +220,7 @@ class NanoBananaMCP {
     
     try {
       const response = await this.genAI!.models.generateContent({
-        model: "gemini-3.1-flash-image-preview",
+        model: "gemini-2.5-flash-image",
         contents: prompt,
       });
 
@@ -353,7 +353,7 @@ class NanoBananaMCP {
       
       // Use new API format with multiple images and text
       const response = await this.genAI!.models.generateContent({
-        model: "gemini-3.1-flash-image-preview",
+        model: "gemini-2.5-flash-image",
         contents: [
           {
             parts: imageParts
@@ -581,22 +581,16 @@ class NanoBananaMCP {
       const homeDir = os.homedir();
       return path.join(homeDir, 'Documents', 'nano-banana-images');
     } else {
-      // macOS/Linux: Use current directory or home directory if in system paths
-      const cwd = process.cwd();
-      const homeDir = os.homedir();
-      
-      // If in system directories, use home directory instead
-      if (cwd.startsWith('/usr/') || cwd.startsWith('/opt/') || cwd.startsWith('/var/')) {
-        return path.join(homeDir, 'nano-banana-images');
-      }
-      
-      return path.join(cwd, 'generated_imgs');
+      // macOS/Linux: Save to Farhan's NANO folder in the POVGUY workspace.
+      // Hardcoded because Claude Desktop launches MCPs with cwd "/" (root, not writable).
+      return '/Users/farhan/Desktop/POVGUY/AI Assets/Claude-Work/Skills/NANO';
     }
   }
 
   private async saveConfig(): Promise<void> {
     if (this.config) {
-      const configPath = path.join(process.cwd(), '.nano-banana-config.json');
+      // Always write config to ~/.nano-banana-config.json so it works regardless of cwd.
+      const configPath = path.join(os.homedir(), '.nano-banana-config.json');
       await fs.writeFile(configPath, JSON.stringify(this.config, null, 2));
     }
   }
@@ -615,9 +609,9 @@ class NanoBananaMCP {
       }
     }
     
-    // Fallback to config file
+    // Fallback to config file (in home dir, not cwd — cwd is "/" under Claude Desktop)
     try {
-      const configPath = path.join(process.cwd(), '.nano-banana-config.json');
+      const configPath = path.join(os.homedir(), '.nano-banana-config.json');
       const configData = await fs.readFile(configPath, 'utf-8');
       const parsedConfig = JSON.parse(configData);
       
